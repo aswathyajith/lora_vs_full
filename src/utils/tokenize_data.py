@@ -5,7 +5,7 @@ from functools import partial
 from multiprocessing import cpu_count
 from typing import Dict, List, Optional, Union
 
-from datasets import Dataset, load_dataset, IterableDataset  # type: ignore
+from datasets import Dataset, load_dataset, IterableDataset, load_from_disk  # type: ignore
 from transformers import (  # type: ignore
     AutoTokenizer,
     BatchEncoding,
@@ -157,7 +157,10 @@ def process_data(args: argparse.Namespace) -> None:
     if not args.out_filename.endswith(".parquet"):
         raise ValueError("`--out_filename` should have the `.parquet` extension")
 
-    dataset = load_dataset(args.dataset, split=args.split)
+    if args.dataset_path:
+        dataset = load_from_disk(args.dataset_path)
+    else:
+        dataset = load_dataset(args.dataset, split=args.split)
     tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
     tokenizer.pad_token = tokenizer.eos_token
 
@@ -207,6 +210,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--dataset",
+        type=str,
+        default="clam004/antihallucination_dataset",
+        help="Dataset name on the Hugging Face Hub",
+    )
+    parser.add_argument(
+        "--dataset_path",
         type=str,
         default="clam004/antihallucination_dataset",
         help="Dataset name on the Hugging Face Hub",
